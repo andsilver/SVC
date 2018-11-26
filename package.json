@@ -13,13 +13,23 @@
   },
   "private": true,
   "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.18.3",
     "chalk": "^2.4.1",
+    "connect-mongo": "^2.0.2",
     "debug": "^4.1.0",
     "dotenv": "^6.1.0",
     "errorhandler": "^1.5.0",
     "express": "^4.16.4",
-    "morgan": "^1.9.1"
+    "express-flash": "0.0.2",
+    "express-session": "^1.15.6",
+    "express-validator": "^5.3.0",
+    "mongoose": "^5.3.13",
+    "morgan": "^1.9.1",
+    "nodemailer": "^4.7.0",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0",
+    "request": "^2.88.0"
   },
   "devDependencies": {
     "eslint": "^5.9.0",
