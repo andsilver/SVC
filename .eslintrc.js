@@ -15,6 +15,7 @@ module.exports = {
       "max-len": 0,
       "no-plusplus": 0,
       "no-sparse-arrays": 0,
-      "global-require": 0
+      "global-require": 0,
+      "no-multi-spaces": 0
   }
 };
