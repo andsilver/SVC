@@ -16,6 +16,8 @@ module.exports = {
       "no-plusplus": 0,
       "no-sparse-arrays": 0,
       "global-require": 0,
-      "no-multi-spaces": 0
+      "no-multi-spaces": 0,
+      "no-shadow": 0,
+      "consistent-return": 0
   }
 };
