@@ -33,6 +33,18 @@ const port = process.env.PORT || 3000;
 
 
 /**
+ * Connect to MongoDB.
+ */
+mongoose.set('useNewUrlParser', true);
+mongoose.connect(process.env.MONGODB_URI);
+mongoose.connection.on('error', (err) => {
+  debug(err);
+  debug('%s MongoDB connection error. Please make sure MongoDB is running.', red('✗'));
+  process.exit();
+});
+
+
+/**
  * Express configuration.
  */
 app.use(logger('dev'));
