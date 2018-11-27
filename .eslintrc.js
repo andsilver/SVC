@@ -18,6 +18,7 @@ module.exports = {
       "global-require": 0,
       "no-multi-spaces": 0,
       "no-shadow": 0,
-      "consistent-return": 0
+      "consistent-return": 0,
+      "no-else-return": 0
   }
 };
