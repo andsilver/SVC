@@ -262,6 +262,28 @@ exports.postReset = (req, res, next) => {
 
 
 /**
+ * GET /password/reset/:token
+ * Reset Password page.
+ */
+exports.getResetToken = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return res.redirect('/account/password');
+  }
+  User
+    .findOne({ passwordResetToken: req.params.token })
+    .where('passwordResetExpires').gt(Date.now())
+    .exec((err, user) => {
+      if (err) { return next(err); }
+      if (!user) {
+        // TODO: handle info msg
+        return res.json('Password reset token is invalid or has expired.');
+      }
+      res.json('Token Valid! Post new password.');
+    });
+};
+
+
+/**
  * POST /delete
  * Delete user account.
  */
