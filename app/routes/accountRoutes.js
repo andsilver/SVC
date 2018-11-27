@@ -1,5 +1,7 @@
-const { Router } = require('express');
-const controller = require('./accountController');
+const { Router }          = require('express');
+
+const controller          = require('./accountController');
+const { isAuthenticated } = require('../services/passport');
 
 const router = Router();
 
@@ -16,9 +18,9 @@ router.route('/signup')
   .post(controller.postSignup);
 
 router.route('/password')
-  .post(controller.postUpdatePassword);
+  .post(isAuthenticated, controller.postUpdatePassword);
 
 router.route('/delete')
-  .post(controller.postDeleteAccount);
+  .post(isAuthenticated, controller.postDeleteAccount);
 
 module.exports = router;
