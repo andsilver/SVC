@@ -149,6 +149,18 @@ exports.postUpdatePassword = (req, res, next) => {
 
 
 /**
+ * GET /password/reset
+ * Reset Password page.
+ */
+exports.getReset = (req, res) => {
+  if (req.isAuthenticated()) {
+    return res.redirect('/account/password');
+  }
+  res.json('Reset Password page.');
+};
+
+
+/**
  * POST /delete
  * Delete user account.
  */
