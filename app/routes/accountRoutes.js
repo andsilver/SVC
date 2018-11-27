@@ -21,6 +21,10 @@ router.route('/password')
   .get(isAuthenticated, controller.getUpdatePassword)
   .post(isAuthenticated, controller.postUpdatePassword);
 
+router.route('/password/reset')
+  .get(controller.getReset)
+  .post(controller.postReset);
+
 router.route('/delete')
   .post(isAuthenticated, controller.postDeleteAccount);
 
