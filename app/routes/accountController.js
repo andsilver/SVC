@@ -116,8 +116,15 @@ exports.postSignup = (req, res, next) => {
 
 
 /**
+ * GET /password
+ * Update/Create password page.
+ */
+exports.getUpdatePassword = (req, res) => res.json('Update/Create Password page.');
+
+
+/**
  * POST /password
- * Update current password.
+ * Update current password or Create.
  */
 exports.postUpdatePassword = (req, res, next) => {
   req.assert('password', 'Password must be at least 4 characters long').len(4);

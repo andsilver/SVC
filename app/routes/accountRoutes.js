@@ -18,6 +18,7 @@ router.route('/signup')
   .post(controller.postSignup);
 
 router.route('/password')
+  .get(isAuthenticated, controller.getUpdatePassword)
   .post(isAuthenticated, controller.postUpdatePassword);
 
 router.route('/delete')
