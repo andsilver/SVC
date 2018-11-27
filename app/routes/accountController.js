@@ -1,8 +1,14 @@
-const passport  = require('passport');
+const { promisify } = require('util');
+const crypto        = require('crypto');
+const passport      = require('passport');
+const nodemailer    = require('nodemailer');
 
-const debug     = require('debug')('app:userController');
+const debug         = require('debug')('app:userController');
 
-const User      = require('../models/userModel');
+const User          = require('../models/userModel');
+
+
+const randomBytesAsync = promisify(crypto.randomBytes);
 
 
 
@@ -157,6 +163,101 @@ exports.getReset = (req, res) => {
     return res.redirect('/account/password');
   }
   res.json('Reset Password page.');
+};
+
+
+/**
+ * POST /password/reset
+ * Create a random token, then the send user an email with a reset link.
+ */
+exports.postReset = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return res.redirect('/account/password');
+  }
+  req.assert('email', 'Please enter a valid email address.').isEmail();
+  req.sanitize('email').normalizeEmail({ gmail_remove_dots: false });
+
+  const errors = req.validationErrors();
+
+  if (errors) {
+    return res.json(errors);
+  }
+
+  const createRandomToken = randomBytesAsync(16)
+    .then(buf => buf.toString('hex'))
+    .catch(err => err);
+
+  const setRandomToken = (token) => {
+    // eslint-disable-next-line implicit-arrow-linebreak
+    User
+      .findOne({ email: req.body.email })
+      .then((user) => {
+        if (!user) {
+          // TODO: handle info msg
+          return res.json('Account with that email address does not exist.');
+        }
+        user.passwordResetToken = token;
+        user.passwordResetExpires = Date.now() + (60 * 60 * 1000); // 1 hour
+
+        user.save()
+          .then(sendResetPasswordEmail)
+          .catch(err => err);
+      })
+      .catch(err => err);
+  };
+
+  const sendResetPasswordEmail = (user) => {
+    if (!user) {
+      // TODO: handle info msg
+      return res.json('Error sending the password reset message. Please try again shortly.');
+    }
+    const token = user.passwordResetToken;
+    let transporter = nodemailer.createTransport({
+      service: 'SendGrid',
+      auth: {
+        user: process.env.SENDGRID_USER,
+        pass: process.env.SENDGRID_PASSWORD
+      }
+    });
+    const mailOptions = {
+      to: user.email,
+      from: 'm4076788@nwytg.net', // Set from address e.g reviewingcode@gmail.com
+      subject: 'Reset password requested',
+      text: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n\n
+        Please click on the following link, or paste this into your browser to complete the process:\n\n
+        http://${req.headers.host}/account/password/reset/${token}\n\n
+        If you did not request this, please ignore this email and your password will remain unchanged.\n`
+    };
+    return transporter.sendMail(mailOptions)
+      .then(() => {
+        return res.json(`An e-mail has been sent to ${user.email} with further instructions.`);
+      })
+      .catch((err) => {
+        if (err.message === 'self signed certificate in certificate chain') {
+          debug('WARNING: Self signed certificate in certificate chain. Retrying with the self signed certificate. Use a valid certificate if in production.');
+          transporter = nodemailer.createTransport({
+            service: 'SendGrid',
+            auth: {
+              user: process.env.SENDGRID_USER,
+              pass: process.env.SENDGRID_PASSWORD
+            },
+            tls: {
+              rejectUnauthorized: false
+            }
+          });
+          return transporter.sendMail(mailOptions)
+            .then(() => {
+              return res.json(`An e-mail has been sent to ${user.email} with further instructions.`);
+            });
+        }
+        debug('ERROR: Could not send forgot password email after security downgrade.\n', err);
+        return err;
+      });
+  };
+
+  createRandomToken
+    .then(setRandomToken)
+    .catch(next);
 };
 
 
