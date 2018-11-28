@@ -229,9 +229,7 @@ exports.postReset = (req, res, next) => {
         If you did not request this, please ignore this email and your password will remain unchanged.\n`
     };
     return transporter.sendMail(mailOptions)
-      .then(() => {
-        return res.json(`An e-mail has been sent to ${user.email} with further instructions.`);
-      })
+      .then(() => res.json(`An e-mail has been sent to ${user.email} with further instructions.`))
       .catch((err) => {
         if (err.message === 'self signed certificate in certificate chain') {
           debug('WARNING: Self signed certificate in certificate chain. Retrying with the self signed certificate. Use a valid certificate if in production.');
@@ -246,9 +244,7 @@ exports.postReset = (req, res, next) => {
             }
           });
           return transporter.sendMail(mailOptions)
-            .then(() => {
-              return res.json(`An e-mail has been sent to ${user.email} with further instructions.`);
-            });
+            .then(() => res.json(`An e-mail has been sent to ${user.email} with further instructions.`));
         }
         debug('ERROR: Could not send forgot password email after security downgrade.\n', err);
         return err;
@@ -338,9 +334,7 @@ exports.postResetToken = (req, res, next) => {
       text: `Hello,\n\nThis is a confirmation that the password for your account ${user.email} has just been changed.\n`
     };
     return transporter.sendMail(mailOptions)
-      .then(() => {
-        return res.json('Success! Your password has been changed.');
-      })
+      .then(() => res.json('Success! Your password has been changed.'))
       .catch((err) => {
         if (err.message === 'self signed certificate in certificate chain') {
           debug('WARNING: Self signed certificate in certificate chain. Retrying with the self signed certificate. Use a valid certificate if in production.');
@@ -355,9 +349,7 @@ exports.postResetToken = (req, res, next) => {
             }
           });
           return transporter.sendMail(mailOptions)
-            .then(() => {
-              return res.json('Success! Your password has been changed.');
-            });
+            .then(() => res.json('Success! Your password has been changed.'));
         }
         debug('ERROR: Could not send password reset confirmation email after security downgrade.\n', err);
         return err;
