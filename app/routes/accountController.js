@@ -6,6 +6,7 @@ const nodemailer    = require('nodemailer');
 const debug         = require('debug')('app:userController');
 
 const User          = require('../models/userModel');
+const Credit        = require('../models/creditModel');
 
 
 const randomBytesAsync = promisify(crypto.randomBytes);
@@ -89,6 +90,8 @@ exports.getSignup = (req, res) => {
  * Create a new account.
  */
 exports.postSignup = (req, res, next) => {
+  req.assert('phone', 'Phone is not valid').isMobilePhone();
+  req.assert('creditCard', 'Credit Card Number is not valid').isCreditCard();
   req.assert('email', 'Email is not valid').isEmail();
   req.sanitize('email').normalizeEmail({ gmail_remove_dots: false });
 
@@ -99,7 +102,27 @@ exports.postSignup = (req, res, next) => {
     return res.json(errors);
   }
 
-  const user = new User({ email: req.body.email });
+  let credits = req.body.credits ? req.body.credits : null;
+  if (credits && credits instanceof Array) {
+    const tempCredits = [];
+    const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
+    credits.forEach((credit) => {
+      const newCredit = new Credit({
+        creditType: credit.creditType,
+        expiresAt: expiry
+      });
+      tempCredits.push(newCredit);
+    });
+    credits = tempCredits;
+  }
+
+  const user = new User({
+    name: req.body.name,
+    phone: req.body.phone,
+    creditCard: req.body.creditCard,
+    email: req.body.email,
+    credits
+  });
 
   User.findOne({ email: req.body.email }, (err, existingUser) => {
     if (err) { return next(err); }
