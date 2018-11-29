@@ -1,16 +1,8 @@
-const { promisify } = require('util');
-const crypto        = require('crypto');
-const passport      = require('passport');
-const nodemailer    = require('nodemailer');
-
 const debug         = require('debug')('app:userController');
 
 const User          = require('../models/userModel');
 const Credit        = require('../models/creditModel');
 const Report        = require('../models/reportModel');
-
-
-const randomBytesAsync = promisify(crypto.randomBytes);
 
 
 
