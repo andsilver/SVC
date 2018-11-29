@@ -43,6 +43,8 @@ const port = process.env.PORT || 3000;
  * Connect to MongoDB.
  */
 mongoose.set('useNewUrlParser', true);
+mongoose.set('useCreateIndex', true);
+mongoose.set('useFindAndModify', false);
 mongoose.connect(process.env.MONGODB_URI);
 mongoose.connection.on('error', (err) => {
   debug(err);
