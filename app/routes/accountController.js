@@ -454,14 +454,35 @@ exports.postCredits = (req, res, next) => {
       return res.json('Account with that email address does not exist.');
     }
 
-    const credits = req.body.credits ? req.body.credits : null;
+    const { credits } = req.body;
     if (credits && credits instanceof Array) {
       const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
+
       credits.forEach((credit) => {
+        let hasReport;
+        let reportId;
+
+        if (credit.generateReport) {
+          // TODO: get report from API
+          const report = {
+            reportType: credit.creditType,
+            registration: 'ABC-1234',
+            stolen: false
+          }; // remove this after vehicle check API integration
+
+          const newReport = new Report(report);
+          user.reports.push(newReport);
+          hasReport = true;
+          reportId = newReport._id;
+        }
+
         const newCredit = new Credit({
           creditType: credit.creditType,
-          expiresAt: expiry
+          expiresAt: expiry,
+          hasReport,
+          reportId
         });
+
         user.credits.push(newCredit);
       });
     }
