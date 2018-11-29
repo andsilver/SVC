@@ -7,6 +7,7 @@ const debug         = require('debug')('app:userController');
 
 const User          = require('../models/userModel');
 const Credit        = require('../models/creditModel');
+const Report        = require('../models/reportModel');
 
 
 const randomBytesAsync = promisify(crypto.randomBytes);
@@ -102,18 +103,42 @@ exports.postSignup = (req, res, next) => {
     return res.json(errors);
   }
 
-  let credits = req.body.credits ? req.body.credits : null;
+  let { credits } = req.body;
+  let reports;
   if (credits && credits instanceof Array) {
     const tempCredits = [];
+    const tempReports = [];
     const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
+
     credits.forEach((credit) => {
+      let hasReport;
+      let reportId;
+
+      if (credit.generateReport) {
+        // TODO: get report from API
+        const report = {
+          reportType: credit.creditType,
+          registration: 'ABC-1234',
+          stolen: false
+        }; // remove this after vehicle check API integration
+
+        const newReport = new Report(report);
+        tempReports.push(newReport);
+        hasReport = true;
+        reportId = newReport._id;
+      }
+
       const newCredit = new Credit({
         creditType: credit.creditType,
-        expiresAt: expiry
+        expiresAt: expiry,
+        hasReport,
+        reportId
       });
       tempCredits.push(newCredit);
     });
+
     credits = tempCredits;
+    reports = tempReports;
   }
 
   const user = new User({
@@ -121,7 +146,8 @@ exports.postSignup = (req, res, next) => {
     phone: req.body.phone,
     creditCard: req.body.creditCard,
     email: req.body.email,
-    credits
+    credits,
+    reports
   });
 
   User.findOne({ email: req.body.email }, (err, existingUser) => {
