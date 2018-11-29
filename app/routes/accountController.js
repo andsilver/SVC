@@ -397,3 +397,88 @@ exports.postDeleteAccount = (req, res, next) => {
     res.json('Your account has been deleted.');
   });
 };
+
+
+/**
+ * GET /credits
+ * Check credits.
+ */
+exports.getCredits = (req, res, next) => {
+  User.findOne({ email: req.user }, (err, user) => {
+    if (err) { return next(err); }
+    if (!user) {
+      // TODO: handle info msg
+      return res.json('Account with that email address does not exist.');
+    }
+
+    res.json(user.credits);
+  });
+};
+
+
+/**
+ * POST /credits
+ * Buy vehicle check credit/s.
+ */
+exports.postCredits = (req, res, next) => {
+  User.findOne({ email: req.user }, (err, user) => {
+    if (err) { return next(err); }
+    if (!user) {
+      // TODO: handle info msg
+      return res.json('Account with that email address does not exist.');
+    }
+
+    const credits = req.body.credits ? req.body.credits : null;
+    if (credits && credits instanceof Array) {
+      const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
+      credits.forEach((credit) => {
+        const newCredit = new Credit({
+          creditType: credit.creditType,
+          expiresAt: expiry
+        });
+        user.credits.push(newCredit);
+      });
+    }
+
+    user.save((err) => {
+      if (err) { return next(err); }
+      // TODO: handle info msg
+      res.json('Transaction Successful!');
+    });
+  });
+};
+
+
+/**
+ * PUT /credits
+ * Use vehicle check credit/s to generate report/s.
+ */
+exports.putCredits = (req, res, next) => {
+  User.findOne({ email: req.user }, (err, user) => {
+    if (err) { return next(err); }
+    if (!user) {
+      // TODO: handle info msg
+      return res.json('Account with that email address does not exist.');
+    }
+
+    // TODO: Transaction { credit -1, report +1 }
+    req.body.credits = [{ creditType: 'Full' }];
+    const credits = req.body.credits ? req.body.credits : null;
+    if (credits && credits instanceof Array) {
+      const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
+      credits.forEach((credit) => {
+        const newCredit = new Credit({
+          creditType: credit.creditType,
+          expiresAt: expiry
+        });
+        user.credits.push(newCredit);
+      });
+    }
+
+    user.save((err) => {
+      if (err) { return next(err); }
+      // TODO: handle info msg
+      res.json('Transaction Successful!');
+    });
+  });
+};
