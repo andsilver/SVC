@@ -29,6 +29,11 @@ router.route('/password/reset/:token')
   .get(controller.getResetToken)
   .post(controller.postResetToken);
 
+router.route('/credits')
+  .get(isAuthenticated, controller.getCredits)
+  .post(isAuthenticated, controller.postCredits)
+  .put(isAuthenticated, controller.putCredits);
+
 router.route('/delete')
   .post(isAuthenticated, controller.postDeleteAccount);
 
