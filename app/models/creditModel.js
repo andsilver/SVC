@@ -9,6 +9,13 @@ const schema = new mongoose.Schema({
   expiresAt: {
     type: Date,
     required: true
+  },
+  hasReport: {
+    type: Boolean,
+    default: false
+  },
+  reportId: {
+    type: String
   }
 }, { timestamps: true });
 
