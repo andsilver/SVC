@@ -508,24 +508,41 @@ exports.putCredits = (req, res, next) => {
       return res.json('Account with that email address does not exist.');
     }
 
-    // TODO: Transaction { credit -1, report +1 }
-    req.body.credits = [{ creditType: 'Full' }];
-    const credits = req.body.credits ? req.body.credits : null;
-    if (credits && credits instanceof Array) {
-      const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
-      credits.forEach((credit) => {
-        const newCredit = new Credit({
-          creditType: credit.creditType,
-          expiresAt: expiry
-        });
-        user.credits.push(newCredit);
-      });
-    }
+    const updateUser = (credit) => {
+      // TODO: get report from API
+      const report = {
+        reportType: credit.creditType,
+        registration: 'ABC-5678',
+        stolen: true
+      }; // remove this after vehicle check API integration
 
-    user.save((err) => {
-      if (err) { return next(err); }
-      // TODO: handle info msg
-      res.json('Transaction Successful!');
-    });
+      const newReport = new Report(report);
+      user.reports.push(newReport);
+
+      const index = user.credits.findIndex(c => c._id.toString() === credit._id.toString());
+      debug(index);
+      user.credits[index].hasReport = true;
+      user.credits[index].reportId  = newReport._id;
+
+      user.save((err) => {
+        if (err) { return next(err); }
+
+        res.json({
+          creditId: credit._id,
+          reportId: newReport._id
+        });
+      });
+    };
+
+    const { creditIds } = req.body;
+    if (creditIds && creditIds instanceof Array) {
+      const creditId = creditIds[0];
+      const credit = user.credits.find(credit => credit._id.toString() === creditId);
+
+      if (!credit || credit.hasReport || credit.expiresAt < Date.now()) {
+        return res.json('Credit is not valid');
+      }
+      updateUser(credit);
+    }
   });
 };
