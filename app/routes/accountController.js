@@ -1,4 +1,4 @@
-const debug         = require('debug')('app:userController');
+const debug         = require('debug')('app:accountController');
 
 const User          = require('../models/userModel');
 const Credit        = require('../models/creditModel');
