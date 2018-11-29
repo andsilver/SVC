@@ -501,6 +501,15 @@ exports.postCredits = (req, res, next) => {
  * Use vehicle check credit/s to generate report/s.
  */
 exports.putCredits = (req, res, next) => {
+  req.assert('creditId', 'CreditId is not valid').isMongoId();
+
+  const errors = req.validationErrors();
+
+  if (errors) {
+    // TODO: handle errors
+    return res.json(errors);
+  }
+
   User.findOne({ email: req.user }, (err, user) => {
     if (err) { return next(err); }
     if (!user) {
@@ -534,15 +543,17 @@ exports.putCredits = (req, res, next) => {
       });
     };
 
-    const { creditIds } = req.body;
-    if (creditIds && creditIds instanceof Array) {
-      const creditId = creditIds[0];
-      const credit = user.credits.find(credit => credit._id.toString() === creditId);
-
-      if (!credit || credit.hasReport || credit.expiresAt < Date.now()) {
-        return res.json('Credit is not valid');
-      }
-      updateUser(credit);
+    const { creditId } = req.body;
+    if (!creditId) {
+      return res.json('creditId is not valid.');
     }
+    const credit = user.credits.find(credit => credit._id.toString() === creditId);
+
+    if (!credit) {
+      return res.json('Credit not found.');
+    } else if (credit.hasReport || credit.expiresAt < Date.now()) {
+      return res.json('Used or expired credit.');
+    }
+    updateUser(credit);
   });
 };
