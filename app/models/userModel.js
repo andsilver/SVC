@@ -1,21 +1,48 @@
-const mongoose  = require('mongoose');
-const bcrypt    = require('bcrypt-nodejs');
+const mongoose            = require('mongoose');
+const bcrypt              = require('bcrypt-nodejs');
+
+const { schema: Credit }  = require('./creditModel');
+const { schema: Report }  = require('./reportModel');
+
 
 const userSchema = new mongoose.Schema({
-  name: String,
-  phone: Number,
+  name: {
+    type: String,
+    required: true
+  },
+  phone: {
+    type: String,
+    required: true
+  },
+  creditCard: {
+    type: String,
+    required: true
+  },
   email: {
     type: String,
-    unique: true,
-    required: true
+    required: true,
+    unique: true
   },
   role: {
     type: String,
     default: 'USER'
   },
-  password: String,
-  passwordResetToken: String,
-  passwordResetExpires: Date,
+  password: {
+    type: String
+  },
+  passwordResetToken: {
+    type: String
+  },
+  passwordResetExpires: {
+    type: Date
+  },
+  credits: {
+    type: [Credit],
+    required: true
+  },
+  reports: {
+    type: [Report]
+  }
 }, { timestamps: true });
 
 
