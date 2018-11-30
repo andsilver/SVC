@@ -17,7 +17,7 @@ exports.getCredits = (req, res, next) => {
       return res.status(400).json({ msg: `Email ${req.user} not found` });
     }
 
-    res.status(200).json(user.credits);
+    res.status(200).json({ totalCredits: user.credits });
   });
 };
 
