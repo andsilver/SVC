@@ -130,7 +130,7 @@ exports.putCredits = (req, res, next) => {
 
         res.json({
           credit: user.credits[index],
-          report: newReport
+          report: user.reports[user.reports.length - 1]
         });
       });
     };
