@@ -403,10 +403,10 @@ exports.postResetToken = (req, res, next) => {
 
 
 /**
- * POST /delete
+ * DELETE /delete
  * Delete user account.
  */
-exports.postDeleteAccount = (req, res, next) => {
+exports.deleteAccount = (req, res, next) => {
   User.deleteOne({ email: req.user }, (err) => {
     if (err) { return next(err); }
     req.logout();

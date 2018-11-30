@@ -30,6 +30,6 @@ router.route('/password/reset/:token')
   .post(controller.postResetToken);
 
 router.route('/delete')
-  .post(isAuthenticated, controller.postDeleteAccount);
+  .delete(isAuthenticated, controller.deleteAccount);
 
 module.exports = router;
