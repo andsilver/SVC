@@ -3,7 +3,7 @@ const crypto        = require('crypto');
 const passport      = require('passport');
 const nodemailer    = require('nodemailer');
 
-const debug         = require('debug')('app:userController');
+const debug         = require('debug')('app:authController');
 
 const User          = require('../models/userModel');
 const Credit        = require('../models/creditModel');
@@ -19,12 +19,10 @@ const randomBytesAsync = promisify(crypto.randomBytes);
  * Signup page.
  */
 exports.getSignup = (req, res) => {
-  if (req.user) {
-    // TODO: handle info msg
-    return res.json('Already Signed up.');
+  if (req.isAuthenticated()) {
+    return res.status(200).json({ msg: 'Signed in' });
   }
-  // TODO: handle info msg
-  res.json('Signup Page.');
+  res.status(200).json({ msg: 'Signed out' });
 };
 
 
@@ -41,8 +39,7 @@ exports.postSignup = (req, res, next) => {
   const errors = req.validationErrors();
 
   if (errors) {
-    // TODO: handle errors
-    return res.json(errors);
+    return res.status(400).json({ msg: errors[0].msg });
   }
 
   let { credits } = req.body;
@@ -95,8 +92,7 @@ exports.postSignup = (req, res, next) => {
   User.findOne({ email: req.body.email }, (err, existingUser) => {
     if (err) { return next(err); }
     if (existingUser) {
-      // TODO: handle info msg
-      return res.json('Account with that email address already exists.');
+      return res.status(400).json({ msg: 'Email already registered' });
     }
     user.save((err) => {
       if (err) { return next(err); }
@@ -104,8 +100,7 @@ exports.postSignup = (req, res, next) => {
         if (err) {
           return next(err);
         }
-        // TODO: redirect to create password
-        res.json('Success!');
+        res.status(200).json({ msg: 'Signup successful' });
       });
     });
   });
@@ -117,11 +112,10 @@ exports.postSignup = (req, res, next) => {
  * Login page.
  */
 exports.getLogin = (req, res) => {
-  if (req.user) {
-    // TODO: handle info msg
-    return res.json('Already Logged In.');
+  if (req.isAuthenticated()) {
+    return res.status(200).json({ msg: 'Signed in' });
   }
-  res.json('Login Page.');
+  res.status(200).json({ msg: 'Signed out' });
 };
 
 
@@ -137,20 +131,17 @@ exports.postLogin = (req, res, next) => {
   const errors = req.validationErrors();
 
   if (errors) {
-    // TODO: handle errors
-    return res.json(errors);
+    return res.status(400).json({ msg: errors[0].msg });
   }
 
   passport.authenticate('local', (err, user, info) => {
     if (err) { return next(err); }
     if (!user) {
-      // TODO: handle info msg
-      return res.json(info);
+      return res.status(401).json(info);
     }
     req.logIn(user, (err) => {
       if (err) { return next(err); }
-      // TODO: handle info msg
-      res.json('Success! You are logged in.');
+      res.status(200).json({ msg: 'Signed in' });
     });
   })(req, res, next);
 };
@@ -163,33 +154,35 @@ exports.postLogin = (req, res, next) => {
 exports.logout = (req, res) => {
   req.logout();
   req.session.destroy((err) => {
-    if (err) debug('Error : Failed to destroy the session during logout.', err);
     req.user = null;
-    res.redirect('/');
+    if (err) {
+      debug('Error : Failed to destroy session during logout', err);
+      return res.status(500).json({ msg: 'Signed out with errors' });
+    }
+    res.status(200).json({ msg: 'Signed out' });
   });
 };
 
 
 /**
- * GET /password
- * Update/Create password page.
+ * GET /password/update
+ * Update password page.
  */
-exports.getUpdatePassword = (req, res) => res.json('Update/Create Password page.');
+exports.getUpdatePassword = (req, res) => res.status(200).json({ msg: 'Signed in' });
 
 
 /**
- * POST /password
- * Update current password or Create.
+ * POST /password/update
+ * Update password.
  */
 exports.postUpdatePassword = (req, res, next) => {
-  req.assert('password', 'Password must be at least 4 characters long').len(4);
+  req.assert('password', 'Password must be at least 8 characters long').len(8);
   req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
 
   const errors = req.validationErrors();
 
   if (errors) {
-    // TODO: handle errors
-    return res.json(errors);
+    return res.status(400).json({ msg: errors[0].msg });
   }
 
   User.findOne({ email: req.user }, (err, user) => {
@@ -197,7 +190,7 @@ exports.postUpdatePassword = (req, res, next) => {
     user.password = req.body.password;
     user.save((err) => {
       if (err) { return next(err); }
-      res.json('Password updated.');
+      res.status(200).json({ msg: 'Password updated' });
     });
   });
 };
@@ -205,31 +198,31 @@ exports.postUpdatePassword = (req, res, next) => {
 
 /**
  * GET /password/reset
- * Reset Password page.
+ * Reset Password email link request page.
  */
 exports.getReset = (req, res) => {
   if (req.isAuthenticated()) {
-    return res.redirect('/account/password');
+    return res.status(200).json({ msg: 'Signed in' });
   }
-  res.json('Reset Password page.');
+  res.status(200).json({ msg: 'Signed out' });
 };
 
 
 /**
  * POST /password/reset
- * Create a random token, then the send user an email with a reset link.
+ * Request Reset Password email link.
  */
 exports.postReset = (req, res, next) => {
   if (req.isAuthenticated()) {
-    return res.redirect('/account/password');
+    return res.status(400).json({ msg: 'Logout to reset password' });
   }
-  req.assert('email', 'Please enter a valid email address.').isEmail();
+  req.assert('email', 'Email is not valid').isEmail();
   req.sanitize('email').normalizeEmail({ gmail_remove_dots: false });
 
   const errors = req.validationErrors();
 
   if (errors) {
-    return res.json(errors);
+    return res.status(400).json({ msg: errors[0].msg });
   }
 
   const createRandomToken = randomBytesAsync(16)
@@ -242,8 +235,7 @@ exports.postReset = (req, res, next) => {
       .findOne({ email: req.body.email })
       .then((user) => {
         if (!user) {
-          // TODO: handle info msg
-          return res.json('Account with that email address does not exist.');
+          return res.status(401).json({ msg: `Email ${req.body.email} not found` });
         }
         user.passwordResetToken = token;
         user.passwordResetExpires = Date.now() + (60 * 60 * 1000); // 1 hour
@@ -257,8 +249,7 @@ exports.postReset = (req, res, next) => {
 
   const sendResetPasswordEmail = (user) => {
     if (!user) {
-      // TODO: handle info msg
-      return res.json('Error sending the password reset message. Please try again shortly.');
+      return res.status(500).json({ msg: 'Error sending the password reset email' });
     }
     const token = user.passwordResetToken;
     let transporter = nodemailer.createTransport({
@@ -274,11 +265,11 @@ exports.postReset = (req, res, next) => {
       subject: 'Reset password requested',
       text: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n\n
         Please click on the following link, or paste this into your browser to complete the process:\n\n
-        http://${req.headers.host}/account/password/reset/${token}\n\n
+        http://${req.headers.host}/auth/password/reset/${token}\n\n
         If you did not request this, please ignore this email and your password will remain unchanged.\n`
     };
     return transporter.sendMail(mailOptions)
-      .then(() => res.json(`An e-mail has been sent to ${user.email} with further instructions.`))
+      .then(() => res.status(200).json({ msg: 'Email sent' }))
       .catch((err) => {
         if (err.message === 'self signed certificate in certificate chain') {
           debug('WARNING: Self signed certificate in certificate chain. Retrying with the self signed certificate. Use a valid certificate if in production.');
@@ -293,7 +284,7 @@ exports.postReset = (req, res, next) => {
             }
           });
           return transporter.sendMail(mailOptions)
-            .then(() => res.json(`An e-mail has been sent to ${user.email} with further instructions.`));
+            .then(() => res.status(200).json({ msg: 'Email sent' }));
         }
         debug('ERROR: Could not send forgot password email after security downgrade.\n', err);
         return err;
@@ -312,7 +303,7 @@ exports.postReset = (req, res, next) => {
  */
 exports.getResetToken = (req, res, next) => {
   if (req.isAuthenticated()) {
-    return res.redirect('/account/password');
+    return res.status(200).json({ msg: 'Signed in' });
   }
   User
     .findOne({ passwordResetToken: req.params.token })
@@ -320,30 +311,28 @@ exports.getResetToken = (req, res, next) => {
     .exec((err, user) => {
       if (err) { return next(err); }
       if (!user) {
-        // TODO: handle info msg
-        return res.json('Password reset token is invalid or has expired.');
+        return res.status(400).json({ msg: 'Invalid or expired token' });
       }
-      res.json('Token Valid! Post new password & confirmPassword.');
+      res.status(200).json({ msg: 'Valid token' });
     });
 };
 
 
 /**
  * POST /password/reset/:token
- * Process the reset password request.
+ * Reset Password.
  */
 exports.postResetToken = (req, res, next) => {
   if (req.isAuthenticated()) {
-    return res.redirect('/account/password');
+    return res.status(200).json({ msg: 'Signed in' });
   }
-  req.assert('password', 'Password must be at least 4 characters long.').len(4);
+  req.assert('password', 'Password must be at least 8 characters long.').len(8);
   req.assert('confirmPassword', 'Passwords must match.').equals(req.body.password);
 
   const errors = req.validationErrors();
 
   if (errors) {
-    // TODO: handle errors
-    return res.json(errors);
+    return res.status(400).json({ msg: errors[0].msg });
   }
 
   const resetPassword = () =>
@@ -353,8 +342,7 @@ exports.postResetToken = (req, res, next) => {
       .where('passwordResetExpires').gt(Date.now())
       .then((user) => {
         if (!user) {
-          // TODO: handle info msg
-          return res.json('Password reset token is invalid or has expired.');
+          return res.status(400).json({ msg: 'Invalid or expired token' });
         }
         user.password = req.body.password;
         user.passwordResetToken = undefined;
@@ -368,7 +356,10 @@ exports.postResetToken = (req, res, next) => {
       });
 
   const sendResetPasswordEmail = (user) => {
-    if (!user) { return; }
+    if (!user) {
+      debug('ERROR: Error sending password reset confirmation email');
+      return res.status(500).json({ msg: 'Password updated with errors' });
+    }
     let transporter = nodemailer.createTransport({
       service: 'SendGrid',
       auth: {
@@ -383,7 +374,7 @@ exports.postResetToken = (req, res, next) => {
       text: `Hello,\n\nThis is a confirmation that the password for your account ${user.email} has just been changed.\n`
     };
     return transporter.sendMail(mailOptions)
-      .then(() => res.json('Success! Your password has been changed.'))
+      .then(() => res.status(200).json({ msg: 'Password updated' }))
       .catch((err) => {
         if (err.message === 'self signed certificate in certificate chain') {
           debug('WARNING: Self signed certificate in certificate chain. Retrying with the self signed certificate. Use a valid certificate if in production.');
@@ -398,7 +389,7 @@ exports.postResetToken = (req, res, next) => {
             }
           });
           return transporter.sendMail(mailOptions)
-            .then(() => res.json('Success! Your password has been changed.'));
+            .then(() => res.status(200).json({ msg: 'Password updated' }));
         }
         debug('ERROR: Could not send password reset confirmation email after security downgrade.\n', err);
         return err;
@@ -419,7 +410,6 @@ exports.postDeleteAccount = (req, res, next) => {
   User.deleteOne({ email: req.user }, (err) => {
     if (err) { return next(err); }
     req.logout();
-    // TODO: handle info msg
-    res.json('Your account has been deleted.');
+    res.json({ msg: 'Account removed' });
   });
 };

@@ -17,7 +17,7 @@ router.route('/login')
 router.route('/logout')
   .get(controller.logout);
 
-router.route('/password')
+router.route('/password/update')
   .get(isAuthenticated, controller.getUpdatePassword)
   .post(isAuthenticated, controller.postUpdatePassword);
 

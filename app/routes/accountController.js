@@ -14,11 +14,10 @@ exports.getCredits = (req, res, next) => {
   User.findOne({ email: req.user }, (err, user) => {
     if (err) { return next(err); }
     if (!user) {
-      // TODO: handle info msg
-      return res.json('Account with that email address does not exist.');
+      return res.status(400).json({ msg: `Email ${req.user} not found` });
     }
 
-    res.json(user.credits);
+    res.status(200).json(user.credits);
   });
 };
 
@@ -31,8 +30,7 @@ exports.postCredits = (req, res, next) => {
   User.findOne({ email: req.user }, (err, user) => {
     if (err) { return next(err); }
     if (!user) {
-      // TODO: handle info msg
-      return res.json('Account with that email address does not exist.');
+      return res.status(400).json({ msg: `Email ${req.user} not found` });
     }
 
     const { credits } = req.body;
@@ -70,8 +68,7 @@ exports.postCredits = (req, res, next) => {
 
     user.save((err) => {
       if (err) { return next(err); }
-      // TODO: handle info msg
-      res.json('Transaction Successful!');
+      res.status(200).json(user.credits);
     });
   });
 };
@@ -87,15 +84,13 @@ exports.putCredits = (req, res, next) => {
   const errors = req.validationErrors();
 
   if (errors) {
-    // TODO: handle errors
-    return res.json(errors);
+    return res.status(400).json({ msg: errors[0].msg });
   }
 
   User.findOne({ email: req.user }, (err, user) => {
     if (err) { return next(err); }
     if (!user) {
-      // TODO: handle info msg
-      return res.json('Account with that email address does not exist.');
+      return res.status(400).json({ msg: `Email ${req.user} not found` });
     }
 
     const updateUser = (credit) => {
@@ -126,14 +121,14 @@ exports.putCredits = (req, res, next) => {
 
     const { creditId } = req.body;
     if (!creditId) {
-      return res.json('creditId is not valid.');
+      return res.status(400).json({ msg: 'creditId is not valid' });
     }
     const credit = user.credits.find(credit => credit._id.toString() === creditId);
 
     if (!credit) {
-      return res.json('Credit not found.');
+      return res.status(400).json({ msg: `CreditId ${creditId} not found` });
     } else if (credit.hasReport || credit.expiresAt < Date.now()) {
-      return res.json('Used or expired credit.');
+      return res.status(400).json({ msg: 'Used or expired credit' });
     }
     updateUser(credit);
   });
