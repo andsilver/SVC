@@ -14,6 +14,9 @@ router.route('/login')
   .get(controller.getLogin)
   .post(controller.postLogin);
 
+router.route('/session')
+  .get(controller.getSession);
+
 router.route('/logout')
   .get(controller.logout);
 

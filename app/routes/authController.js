@@ -15,6 +15,14 @@ const randomBytesAsync = promisify(crypto.randomBytes);
 
 
 /**
+ * GET /session
+ * Validate and return decoded session cookie
+ */
+exports.getSession = (req, res) => res.status(200).json({ user: req.user });
+
+
+
+/**
  * GET /signup
  * Signup page.
  */

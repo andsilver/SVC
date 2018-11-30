@@ -45,7 +45,17 @@ status: 200
   JSON: { msg: "Signed in" }
 ```
 ----
-#### GET `/auth/logut`
+#### GET `/auth/session`
+----
+Validate and get decoded session cookie
+
+Success Response:
+```javascript
+status: 200
+  JSON: { user: "userEmail@mailingService" }
+```
+----
+#### GET `/auth/logout`
 ----
 Success Response:
 ```javascript
