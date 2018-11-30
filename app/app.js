@@ -26,7 +26,6 @@ dotenv.load({ path: '.env.dev' });
  * Route handlers.
  */
 const {
-  homeRoute,
   authRoutes,
   accountRoutes
 } = require('./routes');
@@ -84,7 +83,6 @@ require('./services/passport');
 /**
  * Primary app routes.
  */
-app.use('/', homeRoute);
 app.use('/auth', authRoutes);
 app.use('/account', accountRoutes);
 
