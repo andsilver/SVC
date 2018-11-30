@@ -401,6 +401,6 @@ exports.deleteAccount = (req, res, next) => {
   User.deleteOne({ email: req.user }, (err) => {
     if (err) { return next(err); }
     req.logout();
-    res.json({ msg: 'Account removed' });
+    res.status(200).json({ msg: 'Account removed' });
   });
 };
