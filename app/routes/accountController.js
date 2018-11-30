@@ -119,8 +119,8 @@ exports.putCredits = (req, res, next) => {
         if (err) { return next(err); }
 
         res.json({
-          creditId: credit._id,
-          reportId: newReport._id
+          credit: user.credits[index],
+          report: newReport
         });
       });
     };
