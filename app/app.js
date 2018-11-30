@@ -6,7 +6,6 @@ const mongoose          = require('mongoose');
 const passport          = require('passport');
 const bodyParser        = require('body-parser');
 const errorHandler      = require('errorhandler');
-const flash             = require('express-flash');
 const session           = require('express-session');
 const expressValidator  = require('express-validator');
 const MongoStore        = require('connect-mongo')(session);
@@ -61,7 +60,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.disable('x-powered-by');
 app.use(expressValidator());
-app.use(flash());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
