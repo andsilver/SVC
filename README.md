@@ -1,6 +1,8 @@
 # Stolen Vehicle Check Backend
-
+----
+----
 ## Auth API
+----
 ----
 #### POST `/auth/signup`
 ----
@@ -125,4 +127,67 @@ Success Response:
 ```javascript
 status: 200
   JSON: { msg: "Account removed" }
+```
+
+----
+----
+## Account API
+----
+----
+#### GET `/account/credits`
+----
+Get all account credits
+
+Success Response:
+```javascript
+status: 200
+  JSON: { totalCredits: [...] }
+```
+----
+#### POST `/account/credits`
+----
+Content-Type: `application/x-www-form-urlencoded`
+
+Payload: 
+```javascript
+{Array}  credits - required
+```
+
+```javascript
+credits: [{
+  creditType: "Basic",
+  generateReport: false
+}]
+
+{String}  creditType     - required, "Basic" or "Full"
+{Boolean} generateReport - optional, default: false
+```
+
+Success Response:
+```javascript
+status: 200
+  JSON: {
+    newCredits:   [...],
+    newReports:   [...],
+    totalCredits: [...],
+    totalReports: [...]
+  }
+```
+----
+#### PUT `/account/credits`
+----
+Content-Type: `application/x-www-form-urlencoded`
+
+Payload: 
+```javascript
+{String}  creditId - required
+```
+
+Success Response:
+```javascript
+status: 200
+  JSON: {
+    credit: {...},
+    report: {...}
+  }
 ```
