@@ -53,7 +53,7 @@ status: 200
   JSON: { msg: "Signed out" }
 ```
 ----
-#### POST `/password/update`
+#### POST `/auth/password/update`
 ----
 Content-Type: `application/x-www-form-urlencoded`
 
@@ -68,7 +68,7 @@ status: 200
   JSON: { msg: "Password updated" }
 ```
 ----
-#### POST `/password/reset`
+#### POST `/auth/password/reset`
 ----
 Content-Type: `application/x-www-form-urlencoded`
 
@@ -82,7 +82,7 @@ status: 200
   JSON: { msg: "Email sent" }
 ```
 ----
-#### GET `/password/reset/:token`
+#### GET `/auth/password/reset/:token`
 ----
 Validate token sent with POST `/password/reset`
 
@@ -92,7 +92,7 @@ status: 200
   JSON: { msg: "Valid token" }
 ```
 ----
-#### POST `/password/reset/:token`
+#### POST `/auth/password/reset/:token`
 ----
 Content-Type: `application/x-www-form-urlencoded`
 
@@ -107,7 +107,7 @@ status: 200
   JSON: { msg: "Password updated" }
 ```
 ----
-#### DELETE `/delete`
+#### DELETE `/auth/delete`
 ----
 Delete user data
 
