@@ -38,6 +38,12 @@ exports.postCredits = (req, res, next) => {
       return res.status(400).json({ msg: 'credits is not valid' });
     }
     const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
+    const results = {
+      newCredits: [],
+      newReports: [],
+      totalCredits: [],
+      totalReports: []
+    };
 
     try {
       credits.forEach((credit, i) => {
@@ -54,6 +60,7 @@ exports.postCredits = (req, res, next) => {
 
           const newReport = new Report(report);
           user.reports.push(newReport);
+          results.newReports.push(user.reports[user.reports.length - 1]);
           hasReport = true;
           reportId = newReport._id;
         }
@@ -65,11 +72,14 @@ exports.postCredits = (req, res, next) => {
           reportId
         });
         user.credits.push(newCredit);
+        results.newCredits.push(user.credits[user.credits.length - 1]);
 
         if (i === credits.length - 1) {
           user.save((err) => {
             if (err) { return next(err); }
-            res.status(200).json(user.credits);
+            results.totalCredits = user.credits;
+            results.totalReports = user.reports;
+            res.status(200).json(results);
           });
         }
       });
