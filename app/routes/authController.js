@@ -213,9 +213,6 @@ exports.getReset = (req, res) => {
  * Request Reset Password email link.
  */
 exports.postReset = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return res.status(400).json({ msg: 'Logout to reset password' });
-  }
   req.assert('email', 'Email is not valid').isEmail();
   req.sanitize('email').normalizeEmail({ gmail_remove_dots: false });
 
@@ -302,9 +299,6 @@ exports.postReset = (req, res, next) => {
  * Reset Password page.
  */
 exports.getResetToken = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return res.status(200).json({ msg: 'Signed in' });
-  }
   User
     .findOne({ passwordResetToken: req.params.token })
     .where('passwordResetExpires').gt(Date.now())
@@ -323,9 +317,6 @@ exports.getResetToken = (req, res, next) => {
  * Reset Password.
  */
 exports.postResetToken = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return res.status(200).json({ msg: 'Signed in' });
-  }
   req.assert('password', 'Password must be at least 8 characters long.').len(8);
   req.assert('confirmPassword', 'Passwords must match.').equals(req.body.password);
 
