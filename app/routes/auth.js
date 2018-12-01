@@ -1,7 +1,7 @@
 const { Router }          = require('express');
 
-const controller          = require('./authController');
-const { isAuthenticated } = require('../services/passport');
+const controller          = require('../controllers/auth');
+const { isAuthenticated } = require('../config/passport');
 
 const router = Router();
 

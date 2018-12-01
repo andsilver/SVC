@@ -1,3 +1,6 @@
-module.exports.authRoutes     = require('./authRoutes');
-module.exports.accountRoutes  = require('./accountRoutes');
-module.exports.svcRoutes      = require('./svcRoutes');
+module.exports = (app) => {
+  app.use('/auth', require('./auth'));
+  app.use('/account', require('./credit'));
+  app.use('/account', require('./report'));
+  app.use('/svc', require('./svc'));
+};
