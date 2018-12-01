@@ -191,3 +191,18 @@ status: 200
     report: {...}
   }
 ```
+
+----
+----
+## SVC API
+----
+----
+#### GET `/svc/full/:registration`
+----
+Get VdiFullCheck by VRM
+
+Success Response:
+```javascript
+status: 200
+  JSON: { msg: "Success", data: {...} }
+```
