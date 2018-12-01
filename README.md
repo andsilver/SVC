@@ -134,9 +134,10 @@ status: 200
 ## Account API
 ----
 ----
+### Credits
 #### GET `/account/credits`
 ----
-Get all account credits
+Get all credits
 
 Success Response:
 ```javascript
@@ -190,6 +191,52 @@ status: 200
     credit: {...},
     report: {...}
   }
+```
+----
+### Reports
+#### GET `/account/reports`
+----
+Get all reports
+
+Success Response:
+```javascript
+status: 200
+  JSON: { reports: [...] }
+```
+----
+#### GET `/account/reports/type/:reportType`
+----
+Get reports by reportType
+
+Params Options:
+```javascript
+"Basic" || "Full"
+```
+
+Success Response:
+```javascript
+status: 200
+  JSON: { reports: [...] }
+```
+----
+#### GET `/account/reports/vrm/:registration`
+----
+Get reports by registration
+
+Success Response:
+```javascript
+status: 200
+  JSON: { reports: [...] }
+```
+----
+#### GET `/account/report/:reportId`
+----
+Get report by reportId
+
+Success Response:
+```javascript
+status: 200
+  JSON: { report: [...] }
 ```
 
 ----
