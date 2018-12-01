@@ -20,7 +20,7 @@ exports.getVdiFullCheck = (req, res, next) => {
 
   const requestOptions = {
     method: 'GET',
-    uri: `${process.env.UKVD_API_URL_VdiCheckFull}`,
+    uri: process.env.UKVD_API_URL_VdiCheckFull,
     qs: {
       v: 2,
       api_nullitems: 1,
