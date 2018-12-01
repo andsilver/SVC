@@ -8,7 +8,7 @@
     "dev": "set DEBUG=app,app:* & nodemon app/app.js"
   },
   "engines": {
-    "node": "8.12.0",
+    "node": "8.14.0",
     "npm": "6.4.1"
   },
   "private": true,
