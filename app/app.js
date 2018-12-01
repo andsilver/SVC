@@ -22,16 +22,6 @@ dotenv.load({ path: '.env.dev' });
 
 
 /**
- * Route handlers.
- */
-const {
-  authRoutes,
-  accountRoutes,
-  svcRoutes
-} = require('./routes');
-
-
-/**
  * Create Express server.
  */
 const app = express();
@@ -76,15 +66,13 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
-require('./services/passport');
+require('./config/passport');
 
 
 /**
- * Primary app routes.
+ * Route handlers.
  */
-app.use('/auth', authRoutes);
-app.use('/account', accountRoutes);
-app.use('/svc', svcRoutes);
+require('./routes')(app);
 
 
 /**

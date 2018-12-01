@@ -1,6 +1,6 @@
 const { Router } = require('express');
 
-const controller = require('./svcController');
+const controller = require('../controllers/svc');
 
 
 const router = Router();
