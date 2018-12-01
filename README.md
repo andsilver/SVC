@@ -236,7 +236,7 @@ Get report by reportId
 Success Response:
 ```javascript
 status: 200
-  JSON: { report: [...] }
+  JSON: { report: {...} }
 ```
 
 ----
