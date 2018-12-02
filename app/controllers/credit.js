@@ -1,14 +1,45 @@
-const debug         = require('debug')('app:creditController');
+const debug  = require('debug')('app:creditController');
 
-const User          = require('../models/userModel');
-const Credit        = require('../models/creditModel');
-const Report        = require('../models/reportModel');
+const SVC    = require('./svc');
+
+const User   = require('../models/userModel');
+const Credit = require('../models/creditModel');
 
 
 
 /**
+ * Create report
+ * @param {Object} user         user to update
+ * @param {Object} credit       credit being used
+ * @param {String} registration VRM
+ */
+const createReport = (user, credit, registration) => SVC.generateReport(credit.creditType, registration)
+  .then(report => new Promise((resolve, reject) => {
+    if (report instanceof Error) return reject(report);
+
+    user.reports.push(report);
+
+    const index = user.credits.findIndex(c => c._id.toString() === credit._id.toString());
+    user.credits[index].hasReport = true;
+    user.credits[index].reportId  = report._id;
+
+    resolve(index);
+  }))
+  .then(index => new Promise((resolve, reject) => {
+    user.save((err) => {
+      if (err) { return reject(err); }
+
+      resolve({
+        credit: user.credits[index],
+        report: user.reports[user.reports.length - 1]
+      });
+    });
+  }));
+
+
+/**
  * GET /credits
- * Check credits.
+ * Get all credits.
  */
 exports.getCredits = (req, res, next) => {
   User.findOne({ email: req.user }, (err, user) => {
@@ -17,14 +48,14 @@ exports.getCredits = (req, res, next) => {
       return res.status(400).json({ msg: `Email ${req.user} not found` });
     }
 
-    res.status(200).json({ totalCredits: user.credits });
+    res.status(200).json({ credits: user.credits });
   });
 };
 
 
 /**
  * POST /credits
- * Buy vehicle check credit/s.
+ * Save new credit/s with/without report/s.
  */
 exports.postCredits = (req, res, next) => {
   User.findOne({ email: req.user }, (err, user) => {
@@ -37,32 +68,32 @@ exports.postCredits = (req, res, next) => {
     if (!credits || !Array.isArray(credits)) {
       return res.status(400).json({ msg: 'credits is not valid' });
     }
+
+    // TODO:
+    // Loop through credits and check all fields are there
+    // save credits without reports
+    // create reports using saved credits
+
     const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
     const results = {
-      newCredits: [],
-      newReports: [],
-      totalCredits: [],
-      totalReports: []
+      credits: [],
+      reports: []
     };
 
     try {
-      credits.forEach((credit, i) => {
+      credits.forEach(async (credit, i) => {
         let hasReport;
         let reportId;
 
-        if (credit.generateReport) {
-          // TODO: get report from API
-          const report = {
-            reportType: credit.creditType,
-            registration: 'ABC-1234',
-            stolen: false
-          }; // remove this after vehicle check API integration
+        // Use credit to generate report.
+        if (credit.generateReport && credit.creditType && credit.registration) {
+          const report = await SVC.generateReport(credit.creditType, credit.registration);
+          if (report instanceof Error) throw report;
 
-          const newReport = new Report(report);
-          user.reports.push(newReport);
-          results.newReports.push(user.reports[user.reports.length - 1]);
+          user.reports.push(report);
+          results.reports.push(user.reports[user.reports.length - 1]);
           hasReport = true;
-          reportId = newReport._id;
+          reportId = report._id;
         }
 
         const newCredit = new Credit({
@@ -72,13 +103,11 @@ exports.postCredits = (req, res, next) => {
           reportId
         });
         user.credits.push(newCredit);
-        results.newCredits.push(user.credits[user.credits.length - 1]);
+        results.credits.push(user.credits[user.credits.length - 1]);
 
         if (i === credits.length - 1) {
           user.save((err) => {
             if (err) { return next(err); }
-            results.totalCredits = user.credits;
-            results.totalReports = user.reports;
             res.status(200).json(results);
           });
         }
@@ -91,11 +120,11 @@ exports.postCredits = (req, res, next) => {
 
 
 /**
- * PUT /credits
- * Use vehicle check credit/s to generate report/s.
+ * GET /credit/:creditId
+ * Get credit by creditId.
  */
-exports.putCredits = (req, res, next) => {
-  req.assert('creditId', 'CreditId is not valid').isMongoId();
+exports.getCreditById = (req, res, next) => {
+  req.assert('creditId', 'creditId is not valid').isMongoId();
 
   const errors = req.validationErrors();
 
@@ -109,43 +138,45 @@ exports.putCredits = (req, res, next) => {
       return res.status(400).json({ msg: `Email ${req.user} not found` });
     }
 
-    const updateUser = (credit) => {
-      // TODO: get report from API
-      const report = {
-        reportType: credit.creditType,
-        registration: 'ABC-5678',
-        stolen: true
-      }; // remove this after vehicle check API integration
+    const credit = user.credits.find(credit => credit._id.toString() === req.params.creditId);
 
-      const newReport = new Report(report);
-      user.reports.push(newReport);
+    res.status(200).json({ credit });
+  });
+};
 
-      const index = user.credits.findIndex(c => c._id.toString() === credit._id.toString());
-      debug(index);
-      user.credits[index].hasReport = true;
-      user.credits[index].reportId  = newReport._id;
 
-      user.save((err) => {
-        if (err) { return next(err); }
+/**
+ * PUT /credit
+ * Use credit to generate report.
+ */
+exports.putCredit = (req, res, next) => {
+  req.assert('creditId', 'CreditId is not valid').isMongoId();
+  req.assert('registration', 'Registration is not valid').isAlphanumeric();
 
-        res.json({
-          credit: user.credits[index],
-          report: user.reports[user.reports.length - 1]
-        });
-      });
-    };
+  const errors = req.validationErrors();
 
-    const { creditId } = req.body;
-    if (!creditId) {
-      return res.status(400).json({ msg: 'creditId is not valid' });
+  if (errors) {
+    return res.status(400).json({ msg: errors[0].msg });
+  }
+  req.body.registration = req.body.registration.toUpperCase();
+
+  User.findOne({ email: req.user }, (err, user) => {
+    if (err) { return next(err); }
+    if (!user) {
+      return res.status(400).json({ msg: `Email ${req.user} not found` });
     }
-    const credit = user.credits.find(credit => credit._id.toString() === creditId);
 
+    const { creditId, registration } = req.body;
+
+    const credit = user.credits.find(credit => credit._id.toString() === creditId);
     if (!credit) {
       return res.status(400).json({ msg: `CreditId ${creditId} not found` });
     } else if (credit.hasReport || credit.expiresAt < Date.now()) {
       return res.status(400).json({ msg: 'Used or expired credit' });
     }
-    updateUser(credit);
+
+    createReport(user, credit, registration)
+      .then(response => res.status(200).json(response))
+      .catch(err => next(err));
   });
 };
