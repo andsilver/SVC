@@ -1,9 +1,10 @@
-const request   = require('request-promise');
+const request         = require('request-promise');
 
-const debug     = require('debug')('app:svcController');
-const { blue, green }  = require('chalk');
+const debug           = require('debug')('app:svcController');
+const { blue, green } = require('chalk');
 
-const Report = require('../models/reportModel');
+const Report          = require('../models/reportModel');
+const data            = require('../data/VdiCheckFull_Success');
 
 
 const requestOptions = {
@@ -18,6 +19,8 @@ const requestOptions = {
   json: true,
   resolveWithFullResponse: true
 };
+
+const env = process.env.NODE_ENV;
 
 
 
@@ -39,11 +42,18 @@ exports.getVdiFullCheck = (req, res, next) => {
   request(requestOptions)
     .then((result) => {
       const { StatusMessage } = result.body.Response.StatusInformation.Lookup;
-      const { StatusCode } = result.body.Response;
-      const { DataItems } = result.body.Response;
+      let { StatusCode } = result.body.Response;
+      let { DataItems } = result.body.Response;
 
       debug(`${blue('UKVD:')} ${StatusMessage}`);
-      if (StatusCode !== 'Success') throw new Error(StatusCode);
+      if (StatusCode !== 'Success' && env === 'production') {
+        throw new Error(StatusCode);
+      } else {
+        debug(blue('Mocking UKVD API...'));
+        StatusCode = 'Success';
+        // eslint-disable-next-line prefer-destructuring
+        DataItems = data.Response.DataItems;
+      }
 
       return { msg: StatusCode, data: DataItems };
     })
@@ -62,11 +72,18 @@ exports.generateReport = (reportType, registration) => {
   return request(requestOptions)
     .then((result) => {
       const { StatusMessage } = result.body.Response.StatusInformation.Lookup;
-      const { StatusCode } = result.body.Response;
-      const { DataItems } = result.body.Response;
+      let { StatusCode } = result.body.Response;
+      let { DataItems } = result.body.Response;
 
       debug(`${blue('UKVD:')} ${StatusMessage}`);
-      if (StatusCode !== 'Success') throw new Error(StatusMessage);
+      if (StatusCode !== 'Success' && env === 'production') {
+        throw new Error(StatusMessage);
+      } else {
+        debug(blue('Mocking UKVD API...'));
+        StatusCode = 'Success';
+        // eslint-disable-next-line prefer-destructuring
+        DataItems = data.Response.DataItems;
+      }
 
       const report = new Report({
         reportType,

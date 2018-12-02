@@ -1,4 +1,4 @@
-exports = {
+module.exports = {
   Response: {
     StatusCode: 'Success',
     StatusMessage: 'Success',
