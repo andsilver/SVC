@@ -13,7 +13,7 @@ const MongoStore        = require('connect-mongo')(session);
 const debug             = require('debug')('app');
 const { red, yellow }   = require('chalk');
 
-
+const cors              = require('cors');
 
 /**
  * Load environment variables from .env file.
@@ -35,7 +35,7 @@ const port = process.env.PORT || 3000;
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useCreateIndex', true);
 mongoose.set('useFindAndModify', false);
-mongoose.connect(process.env.MONGODB_URI);
+mongoose.connect(`${process.env.MONGODB_URI}`);
 mongoose.connection.on('error', (err) => {
   debug(err);
   debug('%s MongoDB connection error. Please make sure MongoDB is running.', red('✗'));
@@ -53,6 +53,10 @@ app.disable('x-powered-by');
 app.use(expressValidator());
 app.use(express.static(path.join(__dirname, 'public')));
 
+/**
+ * Enable CORS
+*/
+app.use(cors());
 
 /**
  * Session and Passport configuration.
