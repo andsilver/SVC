@@ -142,11 +142,13 @@ Get all credits
 Success Response:
 ```javascript
 status: 200
-  JSON: { totalCredits: [...] }
+  JSON: { credits: [...] }
 ```
 ----
 #### POST `/account/credits`
 ----
+Save new credit/s with/without report/s
+
 Content-Type: `application/x-www-form-urlencoded`
 
 Payload: 
@@ -157,31 +159,44 @@ Payload:
 ```javascript
 credits: [{
   creditType: "Basic",
-  generateReport: false
+  generateReport: false,
+  registration: "KM12AKK"
 }]
 
-{String}  creditType     - required, "Basic" or "Full"
+{String}  creditType     - required, "Basic" || "Full"
 {Boolean} generateReport - optional, default: false
+{String}  registration   - required, if generateReport: true
 ```
 
 Success Response:
 ```javascript
 status: 200
   JSON: {
-    newCredits:   [...],
-    newReports:   [...],
-    totalCredits: [...],
-    totalReports: [...]
+    credits: [...],
+    reports: [...]
   }
 ```
 ----
-#### PUT `/account/credits`
+#### GET `/account/credit/:creditId`
 ----
+Get credit by creditId
+
+Success Response:
+```javascript
+status: 200
+  JSON: { credit: {...} }
+```
+----
+#### PUT `/account/credit`
+----
+Use credit on report
+
 Content-Type: `application/x-www-form-urlencoded`
 
 Payload: 
 ```javascript
-{String}  creditId - required
+{String}  creditId      - required
+{String}  registration  - required
 ```
 
 Success Response:
