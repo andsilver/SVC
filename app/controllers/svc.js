@@ -41,17 +41,14 @@ exports.getVdiFullCheck = (req, res, next) => {
       const { StatusMessage } = result.body.Response.StatusInformation.Lookup;
       const { StatusCode } = result.body.Response;
       const { DataItems } = result.body.Response;
-      const status = result.statusCode;
 
       debug(`${blue('UKVD:')} ${StatusMessage}`);
+      if (StatusCode !== 'Success') throw new Error(StatusCode);
 
-      return {
-        status,
-        response: { msg: StatusCode, data: DataItems }
-      };
+      return { msg: StatusCode, data: DataItems };
     })
-    .then(result => res.status(result.status).json(result.response))
-    .catch(err => next(err));
+    .then(result => res.status(200).json(result))
+    .catch(err => res.status(500).json({ msg: err.message, data: {} }));
 };
 
 
