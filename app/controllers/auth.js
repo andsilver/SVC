@@ -5,6 +5,7 @@ const nodemailer        = require('nodemailer');
 const { forEachSeries } = require('p-iteration');
 
 const debug             = require('debug')('app:authController');
+const { red }           = require('chalk');
 
 const SVC               = require('./svc');
 
@@ -52,6 +53,53 @@ exports.postSignup = (req, res, next) => {
   if (errors) {
     return res.status(400).json({ msg: errors[0].msg });
   }
+
+  const sendConfirmationEmail = (user, response) => {
+    if (!user) {
+      debug(red('ERROR: Error sending the account confirmation email'));
+      response.msg = 'Signup completed with errors';
+      return res.status(500).json(response);
+    }
+    let transporter = nodemailer.createTransport({
+      service: 'SendGrid',
+      auth: {
+        user: process.env.SENDGRID_USER,
+        pass: process.env.SENDGRID_PASSWORD
+      }
+    });
+    const mailOptions = {
+      to: user.email,
+      from: process.env.SENDGRID_EMAIL,
+      subject: 'Signup Successful',
+      text: `Welcome to Stolen Vehicle Check!\n\n
+        Your account is ready to go.\n\n
+        Credits: ${response.credits.length}\n
+        Reports: ${response.reports.length}\n\n
+        Please create a password to complete the process.\n`
+    };
+    return transporter.sendMail(mailOptions)
+      .then(() => res.status(200).json(response))
+      .catch((err) => {
+        if (err.message === 'self signed certificate in certificate chain') {
+          debug('WARNING: Self signed certificate in certificate chain. Retrying with the self signed certificate. Use a valid certificate if in production.');
+          transporter = nodemailer.createTransport({
+            service: 'SendGrid',
+            auth: {
+              user: process.env.SENDGRID_USER,
+              pass: process.env.SENDGRID_PASSWORD
+            },
+            tls: {
+              rejectUnauthorized: false
+            }
+          });
+          return transporter.sendMail(mailOptions)
+            .then(() => res.status(200).json(response));
+        }
+        debug(`${red('ERROR: Could not send account confirmation email after security downgrade.\n')}`, err);
+        response.msg = 'Signup completed with errors';
+        return res.status(500).json(response);
+      });
+  };
 
   User.findOne({ email: req.body.email }, (err, existingUser) => {
     if (err) { return next(err); }
@@ -107,7 +155,7 @@ exports.postSignup = (req, res, next) => {
             if (err) { return next(err); }
             req.logIn(user, (err) => {
               if (err) { return next(err); }
-              res.status(200).json({
+              sendConfirmationEmail(user, {
                 msg: 'Signup successful',
                 credits: user.credits,
                 reports: user.reports
