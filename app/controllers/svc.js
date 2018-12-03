@@ -41,7 +41,7 @@ exports.getVdiFullCheck = (req, res, next) => {
 
   request(requestOptions)
     .then((result) => {
-      const { StatusMessage } = result.body.Response.StatusInformation.Lookup;
+      const { StatusMessage } = result.body.Response;
       let { StatusCode } = result.body.Response;
       let { DataItems } = result.body.Response;
 
@@ -71,7 +71,7 @@ exports.generateReport = (reportType, registration) => {
 
   return request(requestOptions)
     .then((result) => {
-      const { StatusMessage } = result.body.Response.StatusInformation.Lookup;
+      const { StatusMessage } = result.body.Response;
       let { StatusCode } = result.body.Response;
       let { DataItems } = result.body.Response;
 
