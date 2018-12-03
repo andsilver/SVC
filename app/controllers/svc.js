@@ -87,7 +87,7 @@ exports.generateReport = (reportType, registration) => {
       } = result.body.Response;
 
       debug(`${blue('UKVD:')} ${StatusMessage}`);
-      if (StatusCode !== 'Success') throw new Error(StatusMessage);
+      if (StatusCode !== 'Success') throw new Error(StatusCode);
 
       const report = new Report({
         reportType,

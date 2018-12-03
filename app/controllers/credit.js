@@ -79,41 +79,38 @@ exports.postCredits = (req, res, next) => {
       reports: []
     };
 
-    try {
-      forEachSeries(credits, async (credit, i) => {
-        let hasReport;
-        let reportId;
+    forEachSeries(credits, async (credit, i) => {
+      let hasReport;
+      let reportId;
 
-        // Use credit to generate report.
-        if (credit.generateReport && credit.creditType && credit.registration) {
-          const report = await SVC.generateReport(credit.creditType, credit.registration);
-          if (report instanceof Error) throw report;
+      // Use credit to generate report.
+      if (credit.generateReport && credit.creditType && credit.registration) {
+        const report = await SVC.generateReport(credit.creditType, credit.registration);
+        if (report instanceof Error) throw report;
 
-          user.reports.push(report);
-          results.reports.push(user.reports[user.reports.length - 1]);
-          hasReport = true;
-          reportId = report._id;
-        }
+        user.reports.push(report);
+        results.reports.push(user.reports[user.reports.length - 1]);
+        hasReport = true;
+        reportId = report._id;
+      }
 
-        const newCredit = new Credit({
-          creditType: credit.creditType,
-          expiresAt: expiry,
-          hasReport,
-          reportId
-        });
-        user.credits.push(newCredit);
-        results.credits.push(user.credits[user.credits.length - 1]);
-
-        if (i === credits.length - 1) {
-          user.save((err) => {
-            if (err) { return next(err); }
-            res.status(200).json(results);
-          });
-        }
+      const newCredit = new Credit({
+        creditType: credit.creditType,
+        expiresAt: expiry,
+        hasReport,
+        reportId
       });
-    } catch (error) {
-      return next(error);
-    }
+      user.credits.push(newCredit);
+      results.credits.push(user.credits[user.credits.length - 1]);
+
+      if (i === credits.length - 1) {
+        user.save((err) => {
+          if (err) { return next(err); }
+          res.status(200).json(results);
+        });
+      }
+    })
+      .catch(err => res.status(500).json({ msg: err.message }));
   });
 };
 

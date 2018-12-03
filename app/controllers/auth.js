@@ -127,46 +127,43 @@ exports.postSignup = (req, res, next) => {
 
     const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
 
-    try {
-      forEachSeries(credits, async (credit, i) => {
-        let hasReport;
-        let reportId;
+    forEachSeries(credits, async (credit, i) => {
+      let hasReport;
+      let reportId;
 
-        // Use credit to generate report.
-        if (credit.generateReport && credit.creditType && credit.registration) {
-          const report = await SVC.generateReport(credit.creditType, credit.registration);
-          if (report instanceof Error) throw report;
+      // Use credit to generate report.
+      if (credit.generateReport && credit.creditType && credit.registration) {
+        const report = await SVC.generateReport(credit.creditType, credit.registration);
+        if (report instanceof Error) throw report;
 
-          user.reports.push(report);
-          hasReport = true;
-          reportId = report._id;
-        }
+        user.reports.push(report);
+        hasReport = true;
+        reportId = report._id;
+      }
 
-        const newCredit = new Credit({
-          creditType: credit.creditType,
-          expiresAt: expiry,
-          hasReport,
-          reportId
-        });
-        user.credits.push(newCredit);
+      const newCredit = new Credit({
+        creditType: credit.creditType,
+        expiresAt: expiry,
+        hasReport,
+        reportId
+      });
+      user.credits.push(newCredit);
 
-        if (i === credits.length - 1) {
-          user.save((err) => {
+      if (i === credits.length - 1) {
+        user.save((err) => {
+          if (err) { return next(err); }
+          req.logIn(user, (err) => {
             if (err) { return next(err); }
-            req.logIn(user, (err) => {
-              if (err) { return next(err); }
-              sendConfirmationEmail(user, {
-                msg: 'Signup successful',
-                credits: user.credits,
-                reports: user.reports
-              });
+            sendConfirmationEmail(user, {
+              msg: 'Signup successful',
+              credits: user.credits,
+              reports: user.reports
             });
           });
-        }
-      });
-    } catch (error) {
-      return next(error);
-    }
+        });
+      }
+    })
+      .catch(err => res.status(500).json({ msg: err.message }));
   });
 };
 
