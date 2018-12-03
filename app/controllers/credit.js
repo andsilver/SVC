@@ -1,9 +1,9 @@
-const debug  = require('debug')('app:creditController');
+const { forEachSeries } = require('p-iteration');
 
-const SVC    = require('./svc');
+const SVC               = require('./svc');
 
-const User   = require('../models/userModel');
-const Credit = require('../models/creditModel');
+const User              = require('../models/userModel');
+const Credit            = require('../models/creditModel');
 
 
 
@@ -71,8 +71,7 @@ exports.postCredits = (req, res, next) => {
 
     // TODO:
     // Loop through credits and check all fields are there
-    // save credits without reports
-    // create reports using saved credits
+    // refactor to improve readablity
 
     const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
     const results = {
@@ -81,7 +80,7 @@ exports.postCredits = (req, res, next) => {
     };
 
     try {
-      credits.forEach(async (credit, i) => {
+      forEachSeries(credits, async (credit, i) => {
         let hasReport;
         let reportId;
 
