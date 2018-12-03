@@ -21,7 +21,7 @@ const randomBytesAsync = promisify(crypto.randomBytes);
  * GET /session
  * Validate and return decoded session cookie
  */
-exports.getSession = (req, res) => res.status(200).json({ user: req.user });
+exports.getSession = (req, res) => res.status(200).json({ user: req.user, session: req.session.cookie });
 
 
 
