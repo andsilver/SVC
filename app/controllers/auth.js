@@ -5,9 +5,10 @@ const nodemailer    = require('nodemailer');
 
 const debug         = require('debug')('app:authController');
 
+const SVC           = require('./svc');
+
 const User          = require('../models/userModel');
 const Credit        = require('../models/creditModel');
-const Report        = require('../models/reportModel');
 
 
 const randomBytesAsync = promisify(crypto.randomBytes);
@@ -39,6 +40,7 @@ exports.getSignup = (req, res) => {
  * Create a new account.
  */
 exports.postSignup = (req, res, next) => {
+  req.assert('name', 'Name cannot be empty').notEmpty();
   req.assert('phone', 'Phone is not valid').isMobilePhone();
   req.assert('creditCard', 'Credit Card Number is not valid').isCreditCard();
   req.assert('email', 'Email is not valid').isEmail();
@@ -50,67 +52,73 @@ exports.postSignup = (req, res, next) => {
     return res.status(400).json({ msg: errors[0].msg });
   }
 
-  let { credits } = req.body;
-  let reports;
-  if (credits && credits instanceof Array) {
-    const tempCredits = [];
-    const tempReports = [];
-    const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
-
-    credits.forEach((credit) => {
-      let hasReport;
-      let reportId;
-
-      if (credit.generateReport) {
-        // TODO: get report from API
-        const report = {
-          reportType: credit.creditType,
-          registration: 'ABC-1234',
-          stolen: false
-        }; // remove this after vehicle check API integration
-
-        const newReport = new Report(report);
-        tempReports.push(newReport);
-        hasReport = true;
-        reportId = newReport._id;
-      }
-
-      const newCredit = new Credit({
-        creditType: credit.creditType,
-        expiresAt: expiry,
-        hasReport,
-        reportId
-      });
-      tempCredits.push(newCredit);
-    });
-
-    credits = tempCredits;
-    reports = tempReports;
-  }
-
-  const user = new User({
-    name: req.body.name,
-    phone: req.body.phone,
-    creditCard: req.body.creditCard,
-    email: req.body.email,
-    credits,
-    reports
-  });
-
   User.findOne({ email: req.body.email }, (err, existingUser) => {
     if (err) { return next(err); }
     if (existingUser) {
       return res.status(400).json({ msg: 'Email already registered' });
     }
-    user.save((err) => {
-      if (err) { return next(err); }
-      req.logIn(user, (err) => {
-        if (err) {
-          return next(err);
-        }
-        res.status(200).json({ msg: 'Signup successful' });
-      });
+
+    const user = new User({
+      name: req.body.name,
+      phone: req.body.phone,
+      creditCard: req.body.creditCard,
+      email: req.body.email,
+      credits: [],
+      reports: []
     });
+
+    // TODO:
+    // Loop through credits and check all fields are there
+    // save credits without reports
+    // create reports using saved credits
+
+    const { credits } = req.body;
+    if (!credits || !Array.isArray(credits)) {
+      return res.status(400).json({ msg: 'credits is not valid' });
+    }
+
+    const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
+
+    try {
+      credits.forEach(async (credit, i) => {
+        let hasReport;
+        let reportId;
+
+        // Use credit to generate report.
+        if (credit.generateReport && credit.creditType && credit.registration) {
+          const report = await SVC.generateReport(credit.creditType, credit.registration);
+          if (report instanceof Error) throw report;
+
+          user.reports.push(report);
+          hasReport = true;
+          reportId = report._id;
+        }
+
+        const newCredit = new Credit({
+          creditType: credit.creditType,
+          expiresAt: expiry,
+          hasReport,
+          reportId
+        });
+        user.credits.push(newCredit);
+
+        if (i === credits.length - 1) {
+          user.save((err) => {
+            if (err) { return next(err); }
+            req.logIn(user, (err) => {
+              if (err) { return next(err); }
+              res.status(200).json({
+                msg: 'Signup successful',
+                credits: user.credits,
+                reports: user.reports
+              });
+            });
+          });
+        }
+      });
+    } catch (error) {
+      return next(error);
+    }
   });
 };
 
