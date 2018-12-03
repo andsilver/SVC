@@ -1,14 +1,15 @@
-const { promisify } = require('util');
-const crypto        = require('crypto');
-const passport      = require('passport');
-const nodemailer    = require('nodemailer');
+const { promisify }     = require('util');
+const crypto            = require('crypto');
+const passport          = require('passport');
+const nodemailer        = require('nodemailer');
+const { forEachSeries } = require('p-iteration');
 
-const debug         = require('debug')('app:authController');
+const debug             = require('debug')('app:authController');
 
-const SVC           = require('./svc');
+const SVC               = require('./svc');
 
-const User          = require('../models/userModel');
-const Credit        = require('../models/creditModel');
+const User              = require('../models/userModel');
+const Credit            = require('../models/creditModel');
 
 
 const randomBytesAsync = promisify(crypto.randomBytes);
@@ -58,6 +59,15 @@ exports.postSignup = (req, res, next) => {
       return res.status(400).json({ msg: 'Email already registered' });
     }
 
+    // TODO:
+    // Loop through credits and check all fields are there
+    // refactor to improve readablity
+
+    const { credits } = req.body;
+    if (!credits || !Array.isArray(credits)) {
+      return res.status(400).json({ msg: 'credits is not valid' });
+    }
+
     const user = new User({
       name: req.body.name,
       phone: req.body.phone,
@@ -67,20 +77,10 @@ exports.postSignup = (req, res, next) => {
       reports: []
     });
 
-    // TODO:
-    // Loop through credits and check all fields are there
-    // save credits without reports
-    // create reports using saved credits
-
-    const { credits } = req.body;
-    if (!credits || !Array.isArray(credits)) {
-      return res.status(400).json({ msg: 'credits is not valid' });
-    }
-
     const expiry = Date.now() + (2 * 365 * 24 * 60 * 60 * 1000); // 2 years
 
     try {
-      credits.forEach(async (credit, i) => {
+      forEachSeries(credits, async (credit, i) => {
         let hasReport;
         let reportId;
 
