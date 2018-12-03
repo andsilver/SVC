@@ -41,25 +41,34 @@ exports.getVdiFullCheck = (req, res, next) => {
 
   request(requestOptions)
     .then((result) => {
-      const { StatusMessage } = result.body.Response;
-      let { StatusCode } = result.body.Response;
-      let { DataItems } = result.body.Response;
+      const {
+        StatusMessage,
+        StatusCode,
+        DataItems
+      } = result.body.Response;
 
       debug(`${blue('UKVD:')} ${StatusMessage}`);
-      if (StatusCode !== 'Success' && env === 'production') {
-        throw new Error(StatusCode);
-      } else {
-        debug(blue('Mocking UKVD API...'));
-        StatusCode = 'Success';
-        // eslint-disable-next-line prefer-destructuring
-        DataItems = data.Response.DataItems;
-      }
+      if (StatusCode !== 'Success') throw new Error(StatusCode);
 
       return { msg: StatusCode, data: DataItems };
     })
     .then(result => res.status(200).json(result))
     .catch(err => res.status(500).json({ msg: err.message, data: {} }));
 };
+
+
+/**
+ * GET /success
+ * Mock UKVD success response.
+ */
+exports.getDataSuccess = (req, res, next) => res.status(200).json({ msg: 'Success', data: data.Response.DataItems });
+
+
+/**
+ * GET /fail
+ * Mock UKVD fail response.
+ */
+exports.getDataFail = (req, res, next) => res.status(200).json({ msg: 'ServiceUnavailable', data: {} });
 
 
 /**
@@ -71,19 +80,14 @@ exports.generateReport = (reportType, registration) => {
 
   return request(requestOptions)
     .then((result) => {
-      const { StatusMessage } = result.body.Response;
-      let { StatusCode } = result.body.Response;
-      let { DataItems } = result.body.Response;
+      const {
+        StatusMessage,
+        StatusCode,
+        DataItems
+      } = result.body.Response;
 
       debug(`${blue('UKVD:')} ${StatusMessage}`);
-      if (StatusCode !== 'Success' && env === 'production') {
-        throw new Error(StatusMessage);
-      } else {
-        debug(blue('Mocking UKVD API...'));
-        StatusCode = 'Success';
-        // eslint-disable-next-line prefer-destructuring
-        DataItems = data.Response.DataItems;
-      }
+      if (StatusCode !== 'Success') throw new Error(StatusMessage);
 
       const report = new Report({
         reportType,
