@@ -68,7 +68,7 @@ exports.getDataSuccess = (req, res, next) => res.status(200).json({ msg: 'Succes
  * GET /fail
  * Mock UKVD fail response.
  */
-exports.getDataFail = (req, res, next) => res.status(200).json({ msg: 'ServiceUnavailable', data: {} });
+exports.getDataFail = (req, res, next) => res.status(500).json({ msg: 'ServiceUnavailable', data: {} });
 
 
 /**
