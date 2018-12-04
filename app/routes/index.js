@@ -1,6 +1,6 @@
 module.exports = (app) => {
-  app.use('/auth', require('./auth'));
-  app.use('/account', require('./credit'));
-  app.use('/account', require('./report'));
-  app.use('/svc', require('./svc'));
+  app.use('/api/auth', require('./auth'));
+  app.use('/api/account', require('./credit'));
+  app.use('/api/account', require('./report'));
+  app.use('/api/svc', require('./svc'));
 };
