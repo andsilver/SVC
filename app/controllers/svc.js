@@ -62,10 +62,47 @@ exports.getVdiFullCheck = (req, res, next) => {
 
 
 /**
+ * GET /:datapackage/:registration
+ * Get data by package param and VRM.
+ */
+exports.getDataByPackage = (req, res, next) => {
+  req.params.datapackage = req.params.datapackage.toLowerCase();
+
+  req.assert('datapackage', 'Data Package is not valid').isIn(dataPackages);
+  req.assert('registration', 'Registration is not valid').isAlphanumeric();
+
+  const errors = req.validationErrors();
+
+  if (errors) {
+    return res.status(400).json({ msg: errors[0].msg });
+  }
+
+  requestOptions.qs.key_VRM = req.params.registration;
+  requestOptions.uri = `${process.env.UKVD_API_URL_datapackage}/${req.params.datapackage}`;
+
+  request(requestOptions)
+    .then((result) => {
+      const {
+        StatusMessage,
+        StatusCode,
+        DataItems
+      } = result.body.Response;
+
+      debug(`${blue('UKVD:')} ${req.params.datapackage} ${StatusMessage}`);
+      if (StatusCode !== 'Success') throw new Error(StatusCode);
+
+      return { msg: StatusCode, data: DataItems };
+    })
+    .then(result => res.status(200).json(result))
+    .catch(err => res.status(500).json({ msg: err.message, data: {} }));
+};
+
+
+/**
  * GET /success
  * Mock UKVD success response.
  */
-exports.getDataSuccess = (req, res, next) => res.status(200).json({ msg: 'Success', data: data.Response.DataItems });
+exports.getDataSuccess = (req, res, next) => res.status(200).json({ msg: 'Success', data: VdiCheckFull_Success.Response.DataItems });
 
 
 /**

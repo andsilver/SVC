@@ -10,6 +10,9 @@ const router = Router();
 router.route('/full/:registration')
   .get(controller.getVdiFullCheck);
 
+router.route('/:datapackage/:registration')
+  .get(controller.getDataByPackage);
+
 router.route('/success')
   .get(controller.getDataSuccess);
 
