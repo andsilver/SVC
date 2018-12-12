@@ -261,7 +261,7 @@ status: 200
 ----
 #### GET `/svc/full/:registration`
 ----
-Get VdiFullCheck by VRM
+Get VdiCheckFull by VRM
 
 Success Response:
 ```javascript

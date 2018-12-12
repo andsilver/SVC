@@ -30,7 +30,7 @@ const env = process.env.NODE_ENV;
 
 /**
  * GET /full/:registration
- * VdiFullCheck by VRM.
+ * VdiCheckFull by VRM.
  */
 exports.getVdiFullCheck = (req, res, next) => {
   req.assert('registration', 'Registration is not valid').isAlphanumeric();
