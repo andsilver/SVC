@@ -268,3 +268,33 @@ Success Response:
 status: 200
   JSON: { msg: "Success", data: {...} }
 ```
+----
+#### GET `/svc/:datapackage/:registration`
+----
+Get data by Data Package and VRM
+
+Params Options (Case-Insensitive):
+
+`:datapackage`
+```javascript
+'BatteryData'
+'MotHistoryAndTaxStatusData'
+'MotHistoryData'
+'PostcodeLookup'
+'SpecAndOptionsData'
+'TyreData'
+'ValuationCanPrice'
+'ValuationData'
+'VdiCheckFull'
+'VehicleAndMotHistory'
+'VehicleData'
+'VehicleDataIRL'
+'VehicleImageData'
+'VehicleTaxData'
+```
+
+Success Response:
+```javascript
+status: 200
+  JSON: { msg: "Success", data: {...} }
+```
