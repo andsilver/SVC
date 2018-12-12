@@ -4,7 +4,11 @@ const debug           = require('debug')('app:svcController');
 const { blue, green } = require('chalk');
 
 const Report          = require('../models/reportModel');
-const data            = require('../data/VdiCheckFull_Success');
+
+const {
+  dataPackages,
+  VdiCheckFull_Success
+} = require('../data');
 
 
 const requestOptions = {
