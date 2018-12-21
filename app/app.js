@@ -66,7 +66,11 @@ app.use(session({
   saveUninitialized: true,
   secret: process.env.SESSION_SECRET,
   cookie: { maxAge: 24 * 60 * 60 * 1000 }, // 24 hrs
-  store: new MongoStore({ mongooseConnection: mongoose.connection })
+  unset: 'destroy',
+  store: new MongoStore({
+    mongooseConnection: mongoose.connection,
+    stringify: false
+  })
 }));
 app.use(passport.initialize());
 app.use(passport.session());
